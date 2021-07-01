@@ -18,10 +18,9 @@ export class CategoryService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(): Observable<Category> {
-    return this.http.get(this.apiPath).pipe(
-      catchError(this.handleError)
-    )
+  getAll(): Observable<Category[]> {
+    return this.http.get<Category[]>(this.apiPath);
+
   }
 
   getById(id: number): Observable<Category> {
@@ -42,7 +41,7 @@ export class CategoryService {
     )
   }
 
-  delete(id: number): Observable<any> {
+  delete(id: any): Observable<any> {
     return this.http.delete(`${this.apiPath}/${id}`).pipe(
       catchError(this.handleError),
       map(() => null)

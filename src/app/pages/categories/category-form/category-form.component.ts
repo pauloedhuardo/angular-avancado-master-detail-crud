@@ -16,9 +16,9 @@ import toastr from 'toastr';
 })
 export class CategoryFormComponent implements OnInit, AfterContentChecked {
 
-  currentAction?: string;
-  categoryForm?: FormGroup;
-  pageTitle?: string;
+  currentAction: string;
+  categoryForm: FormGroup;
+  pageTitle: string;
   serverErrorMessages: string[] = [];
   submittingForm: boolean = false;
   category: Category = new Category();
@@ -38,6 +38,14 @@ export class CategoryFormComponent implements OnInit, AfterContentChecked {
 
   ngAfterContentChecked(){
     this.setPageTitle();
+  }
+
+  submitForm() {
+    this.submittingForm = true;
+    if(this.currentAction == 'new')
+      this.createCategory();
+    else // currentAction == "edit"
+      this.updateCategory();
   }
 
   // Private methods
@@ -65,7 +73,7 @@ export class CategoryFormComponent implements OnInit, AfterContentChecked {
       .subscribe(
         (category) => {
           this.category = category;
-          this.categoryForm?.patchValue(category);
+          this.categoryForm.patchValue(category);
         },
         (error) => alert('Ocorreu um erro no servidor, tente mais tarde.')
       )
@@ -79,6 +87,40 @@ export class CategoryFormComponent implements OnInit, AfterContentChecked {
       const categoryName = this.category.name || '';
       this.pageTitle = 'Editando categoria: ' + categoryName;
     }
+  }
+
+  createCategory(){
+    const category: Category = Object.assign(new Category(), this.categoryForm.value);
+    this.categoryService.create(category).subscribe(
+      category => this.actionsForSuccess(category),
+      error => this.actionsForError(error)
+    )
+  }
+
+  updateCategory() {
+    const category: Category = Object.assign(new Category(), this.categoryForm.value);
+    this.categoryService.update(category).subscribe(
+      category => this.actionsForSuccess(category),
+      error => this.actionsForError(error)
+    )
+  }
+
+  private actionsForSuccess(category: Category) {
+    toastr.success('Solicitação processada com sucesso!');
+
+    // redirect/reload component page
+    this.router.navigateByUrl('categories', {skipLocationChange: true}).then(
+      () => this.router.navigate(['categories', category.id, 'edit'])
+    )
+  }
+
+  private actionsForError(error: any) {
+    toastr.error('Ocorreu um erro ao processar sua solicitação!');
+    this.submittingForm = false;
+    if(error === 422)
+      this.serverErrorMessages = JSON.parse(error._body).errors;
+    else
+      this.serverErrorMessages = ['Falha na comunicação com o servidor. Por favor, tente mais tarde!'];
   }
 
 }

@@ -1,59 +1,15 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-
-import { Observable, throwError } from 'rxjs';
-import { map, catchError, flatMap } from 'rxjs/operators';
+import { Injectable, Injector } from '@angular/core';
 
 import { Category } from './category.model';
-import { environment } from 'src/environments/environment';
+
+import { BaseResourceService } from '../../../shared/services/base-resource.service';
 
 @Injectable({
   providedIn: 'root'
 })
-export class CategoryService {
+export class CategoryService extends BaseResourceService<Category> {
 
-  url: string = environment.apiBaseURL;
-
-  private apiPath: string = `${this.url}/api/categories`;
-
-  constructor(private http: HttpClient) { }
-
-  getAll(): Observable<Category[]> {
-    return this.http.get<Category[]>(this.apiPath);
-
+  constructor(protected injector: Injector) {
+    super("api/categories", injector);
   }
-
-  getById(id: number): Observable<Category> {
-    return this.http.get(`${this.apiPath}/${id}`).pipe(
-      catchError(this.handleError)
-    )
-  }
-
-  create(category: Category): Observable<Category> {
-    return this.http.post(this.apiPath, category).pipe(
-      catchError(this.handleError)
-    )
-  }
-
-  update(category: Category): Observable<Category> {
-    return this.http.put(`${this.apiPath}/${category.id}`, category).pipe(
-      catchError(this.handleError)
-    )
-  }
-
-  delete(id: any): Observable<any> {
-    return this.http.delete(`${this.apiPath}/${id}`).pipe(
-      catchError(this.handleError),
-      map(() => null)
-    )
-  }
-
-  // Private Methods
-
-  private handleError(error: any): Observable<any> {
-    console.log('ERRO NA REQUISIÇÃO => ', error);
-    return throwError(error);
-  }
-
-
 }

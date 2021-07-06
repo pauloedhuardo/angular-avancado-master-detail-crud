@@ -2,6 +2,8 @@ import { AfterContentChecked, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { IntlService } from "@progress/kendo-angular-intl";
+
 import { Entry } from '../shared/entry.model';
 import { EntryService } from '../shared/entry.service';
 
@@ -39,6 +41,7 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
   }
   
   constructor(
+    private intl: IntlService,
     private entryService: EntryService,
     private categoryService: CategoryService,
     private route: ActivatedRoute,

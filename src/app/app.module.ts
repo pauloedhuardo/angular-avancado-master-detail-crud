@@ -3,6 +3,8 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
+import { IntlModule } from "@progress/kendo-angular-intl";
+
 import {TranslateLoader, TranslateModule} from '@ngx-translate/core';
 import {TranslateHttpLoader} from '@ngx-translate/http-loader';
 
@@ -20,6 +22,7 @@ import { EntriesModule } from './pages/entries/entries.module';
     BrowserAnimationsModule,
     AppRoutingModule,
     HttpClientModule,
+    IntlModule,
     CategoriesModule,
     EntriesModule,
     TranslateModule.forRoot({

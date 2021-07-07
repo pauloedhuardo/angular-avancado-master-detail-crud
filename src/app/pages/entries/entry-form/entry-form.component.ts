@@ -1,16 +1,12 @@
-import { AfterContentChecked, Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, Injector, OnInit } from '@angular/core';
+import { Validators } from '@angular/forms';
 
-import { IntlService } from "@progress/kendo-angular-intl";
+import { switchMap } from 'rxjs/operators';
 
 import { Entry } from '../shared/entry.model';
 import { EntryService } from '../shared/entry.service';
 
-import { switchMap } from 'rxjs/operators';
-
-import toastr from 'toastr';
-
+import { BaseResourceFormComponent } from '../../../shared/components/base-resource-form/base-resource-form.component';
 import { Category } from '../../categories/shared/category.model';
 import { CategoryService } from '../../categories/shared/category.service';
 
@@ -19,14 +15,8 @@ import { CategoryService } from '../../categories/shared/category.service';
   templateUrl: './entry-form.component.html',
   styleUrls: ['./entry-form.component.css']
 })
-export class EntryFormComponent implements OnInit, AfterContentChecked {
+export class EntryFormComponent extends BaseResourceFormComponent<Entry> implements OnInit {
 
-  currentAction: string;
-  entryForm: FormGroup;
-  pageTitle: string;
-  serverErrorMessages: string[];
-  submittingForm: boolean = false;
-  entry: Entry = new Entry();
   categories: Array<Category>;
 
   imaskConfig = {
@@ -41,32 +31,17 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
   }
   
   constructor(
-    private intl: IntlService,
-    private entryService: EntryService,
-    private categoryService: CategoryService,
-    private route: ActivatedRoute,
-    private router: Router,
-    private formBuilder: FormBuilder
-  ) { }
+    protected entryService: EntryService,
+    protected categoryService: CategoryService,
+    protected injector: Injector
+  ) {
+    super(injector, new Entry(), entryService, Entry.fromJson);
+   }
 
-  ngOnInit(): void {
-    this.setCurrentAction();
-    this.buildEntryForm();
-    this.loadEntry();
-    this.loadCategories();
-  }
-
-  ngAfterContentChecked(){
-    this.setPageTitle();
-  }
-
-  submitForm() {
-    this.submittingForm = true;
-    if(this.currentAction == 'new')
-      this.createEntry();
-    else // currentAction == "edit"
-      this.updateEntry();
-  }
+   ngOnInit(){
+     this.loadCategories();
+     super.ngOnInit();
+   }
 
   get typeOptions(): Array<any> {
     return Object.entries(Entry.types).map(
@@ -79,17 +54,8 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
     )
   }
 
-  // Private methods
-
-  private setCurrentAction() {
-    if(this.route.snapshot.url[0].path == 'new')
-      this.currentAction = 'new';
-    else
-      this.currentAction = 'edit';
-  }
-
-  private buildEntryForm() {
-    this.entryForm = this.formBuilder.group({
+  protected buildResourceForm() {
+    this.resourceForm = this.formBuilder.group({
       id: [null],
       name: [null, [Validators.required, Validators.minLength(2)]],
       description: [null],
@@ -101,70 +67,35 @@ export class EntryFormComponent implements OnInit, AfterContentChecked {
     });
   }
 
-  private loadEntry() {
+  protected loadCategories() {
+    this.categoryService.getAll().subscribe(
+      categories => this.categories = categories
+    )
+  }
+
+  protected loadResource() {
     if(this.currentAction == 'edit') {
       this.route.paramMap.pipe(
-        switchMap(params => this.entryService.getById(+params.get('id')!))
+        switchMap(params => this.resourceService.getById(+params.get('id')!))
       )
       .subscribe(
-        (entry) => {
-          this.entry = entry;
-          //this.entryForm.patchValue(entry);
-          this.entryForm.setValue({id: entry.id, name: entry.name, description: entry.description, type: entry.type,
-                                   amount: entry.amount, date: entry.date, paid: entry.paid, categoryId: entry.category?.id});
+        (resource) => {
+          this.resource = resource;
+          this.resourceForm.setValue({'id':resource.id, 'name':resource.name, 'description':resource.description, 'type':resource.type,
+                                       'amount':resource.amount, 'date':resource.date, 'paid':resource.paid, 'categoryId':resource.category?.id})
         },
         (error) => alert('Ocorreu um erro no servidor, tente mais tarde.')
       )
     }
   }
 
-  private loadCategories() {
-    this.categoryService.getAll().subscribe(
-      categories => this.categories = categories
-    )
+  protected creationPageTitle(): string {
+    return 'Cadastro de Novo Lançamento';
   }
 
-  private setPageTitle() {
-    if(this.currentAction == 'new')
-      this.pageTitle = 'Cadastro de novo Lançamento'
-    else {
-      const entryName = this.entry.name || '';
-      this.pageTitle = 'Editando lançamento: ' + entryName;
-    }
-  }
-
-  createEntry(){
-    const entry: Entry = Entry.fromJson(this.entryForm.value);
-    this.entryService.create(entry).subscribe(
-      entry => this.actionsForSuccess(entry),
-      error => this.actionsForError(error)
-    )
-  }
-
-  updateEntry() {
-    const entry: Entry = Entry.fromJson(this.entryForm.value);
-    this.entryService.update(entry).subscribe(
-      entry => this.actionsForSuccess(entry),
-      error => this.actionsForError(error)
-    )
-  }
-
-  private actionsForSuccess(entry: Entry) {
-    toastr.success('Solicitação processada com sucesso!');
-
-    // redirect/reload component page
-    this.router.navigateByUrl('entries', {skipLocationChange: true}).then(
-      () => this.router.navigate(['entries', entry.id, 'edit'])
-    )
-  }
-
-  private actionsForError(error: any) {
-    toastr.error('Ocorreu um erro ao processar sua solicitação!');
-    this.submittingForm = false;
-    if(error === 422)
-      this.serverErrorMessages = JSON.parse(error._body).errors;
-    else
-      this.serverErrorMessages = ['Falha na comunicação com o servidor. Por favor, tente mais tarde!'];
+  protected editionPageTitle(): string {
+    const categoryName = this.resource.name || '';
+    return "Editando Lançamento: " + this.resource.name;
   }
 
 }

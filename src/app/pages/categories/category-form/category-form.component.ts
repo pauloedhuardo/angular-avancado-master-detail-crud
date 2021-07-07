@@ -1,5 +1,5 @@
 import { AfterContentChecked, Component, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { Category } from '../shared/category.model';
@@ -107,7 +107,7 @@ export class CategoryFormComponent implements OnInit, AfterContentChecked {
 
   private actionsForSuccess(category: Category) {
     toastr.success('Solicitação processada com sucesso!');
-
+    
     // redirect/reload component page
     this.router.navigateByUrl('categories', {skipLocationChange: true}).then(
       () => this.router.navigate(['categories', category.id, 'edit'])

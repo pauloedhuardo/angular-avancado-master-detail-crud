@@ -1,7 +1,7 @@
 import { Injectable, Injector } from '@angular/core';
 
 import { Observable } from 'rxjs';
-import { flatMap, catchError, map } from 'rxjs/operators'
+import { mergeMap } from 'rxjs/operators'
 
 import { BaseResourceService } from 'src/app/shared/services/base-resource.service';
 import { CategoryService } from '../../categories/shared/category.service';
@@ -17,12 +17,12 @@ export class EntryService extends BaseResourceService<Entry> {
   apiPath: string = environment.apiBaseURL+"api/entries";
 
   constructor(protected injector: Injector, private categoryService: CategoryService) {
-    super("api/entries", injector);
+    super("api/entries", injector, Entry.fromJson);
    }
 
   create(entry: Entry): Observable<Entry> {
     return this.categoryService.getById(entry.categoryId as number).pipe(
-      flatMap(category => {
+      mergeMap(category => {
         entry.category = category;
         return super.create(entry);
       })
@@ -31,17 +31,11 @@ export class EntryService extends BaseResourceService<Entry> {
 
   update(entry: Entry): Observable<Entry> {
     return this.categoryService.getById(entry.categoryId as number).pipe(
-      flatMap(category => {
+      mergeMap(category => {
         entry.category = category;
         return super.update(entry);
       })
     )
-  }
-
-  // Protected Methods
-
-  protected jsonDataToResource(jsonData: any): Entry {
-    return Object.assign(new Entry(), jsonData);
   }
 
 }

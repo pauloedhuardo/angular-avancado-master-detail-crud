@@ -27,21 +27,21 @@ export abstract class BaseResourceService<T extends BaseResourceModel> {
     getById(id: number): Observable<T> {
         return this.http.get(`${this.urlApi}/${id}`).pipe(
             catchError(this.handleError),
-            map( response => { return response })
+            map( response => { return this.jsonDataToResource(response) })
         )
     }
     
     create(resource: T): Observable<T> {
         return this.http.post(this.urlApi, resource).pipe(
             catchError(this.handleError),
-            map( response => { return response })
+            map( response => { return this.jsonDataToResource(response) })
         )
     }
 
     update(resource: T): Observable<T> {
         return this.http.put(`${this.urlApi}/${resource.id}`, resource).pipe(
             catchError(this.handleError),
-            map( response => { return response })
+            map( response => { return this.jsonDataToResource(response) })
         )
     }
 
@@ -53,6 +53,10 @@ export abstract class BaseResourceService<T extends BaseResourceModel> {
     }
 
     // Protected Methods
+
+    protected jsonDataToResource(jsonData: any): T {
+        return jsonData as T;
+    }
 
     protected handleError(error: any): Observable<any> {
         console.log('ERRO NA REQUISIÇÃO => ', error);

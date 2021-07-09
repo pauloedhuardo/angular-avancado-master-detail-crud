@@ -3,6 +3,8 @@ import { Validators } from '@angular/forms';
 
 import { switchMap } from 'rxjs/operators';
 
+import currencyFormatter from 'currency-formatter';
+
 import { Entry } from '../shared/entry.model';
 import { EntryService } from '../shared/entry.service';
 
@@ -81,8 +83,8 @@ export class EntryFormComponent extends BaseResourceFormComponent<Entry> impleme
       .subscribe(
         (resource) => {
           this.resource = resource;
-          this.resourceForm.setValue({'id':resource.id, 'name':resource.name, 'description':resource.description, 'type':resource.type,
-                                       'amount':resource.amount, 'date':resource.date, 'paid':resource.paid, 'categoryId':resource.category?.id})
+          this.resourceForm.setValue({'id': resource.id, 'name': resource.name, 'description': resource.description, 'type': resource.type,
+                                       'amount': resource.amount as string, 'date': resource.date, 'paid': resource.paid, 'categoryId': resource.category?.id})
         },
         (error) => alert('Ocorreu um erro no servidor, tente mais tarde.')
       )

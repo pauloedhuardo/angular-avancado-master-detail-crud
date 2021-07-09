@@ -1,5 +1,7 @@
 import { Injectable, Injector } from '@angular/core';
 
+import { HttpClient } from '@angular/common/http';
+
 import { Observable } from 'rxjs';
 import { catchError, mergeMap } from 'rxjs/operators'
 
@@ -16,7 +18,7 @@ export class EntryService extends BaseResourceService<Entry> {
 
   apiPath: string = environment.apiBaseURL+"api/entries";
 
-  constructor(protected injector: Injector, private categoryService: CategoryService) {
+  constructor(protected injector: Injector, private categoryService: CategoryService, protected http: HttpClient) {
     super("api/entries", injector, Entry.fromJson);
    }
 
@@ -28,6 +30,10 @@ export class EntryService extends BaseResourceService<Entry> {
     return this.setCategoryAndSendToServer(entry, super.update.bind(this));
   }
 
+  getByMonthAndYear(month: number, year: number): Observable<Entry[]> {
+    return this.http.get<Entry[]>(`${this.apiPath}/${month}/${year}`);
+  }
+
   private setCategoryAndSendToServer(entry: Entry, sendFn: any): Observable<any> {
     return this.categoryService.getById(entry.categoryId as number).pipe(
       mergeMap(category => {
@@ -37,5 +43,7 @@ export class EntryService extends BaseResourceService<Entry> {
       catchError(this.handleError)
     )
   }
+
+  
 
 }
